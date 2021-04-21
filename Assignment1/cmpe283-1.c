@@ -43,26 +43,13 @@ struct capability_info pinbased[5] =
 };
 
 /*
- * report_capability
- *
- * Reports capabilities present in 'cap' using the corresponding MSR values
- * provided in 'lo' and 'hi'.
- *
- * Parameters:
- *  cap: capability_info structure for this feature
- *  len: number of entries in 'cap'
- *  lo: low 32 bits of capability MSR value describing this feature
- *  hi: high 32 bits of capability MSR value describing this feature
- */
-
-/*
  * Proc Based capabilities
  * Referred SDM volume 3, section 24.6.1
  * By: Jiang Du
  */
 struct capability_info procbased[21] =
 {
-    {2 , "Interrupt-window" },
+    {2 , "Interrupt-window Exiting" },
     {3 , "Use TSC Offsetting" },
     {7 , "HLT Exiting" },
     {9 , "INVLPG Exiting" },
@@ -84,6 +71,56 @@ struct capability_info procbased[21] =
     {30 , "PAUSE Exiting" },
     {31 , "Activate Secondary Controls" }
 };
+
+/*
+ * Proc Based-Secondary capabilities
+ * Referred SDM volume 3, section 24.6.1
+ * By: Jiang Du
+ */
+struct capability_info procbased2[27] =
+{
+
+    { 0, "Virtualize APIC Accesses" },
+    { 1, "Enable EPT" },
+    { 2, "Descriptor-table Exiting" },
+    { 3, "Enable RDTSCP" },
+    { 4, "Virtualize x2APIC Mode" },
+    { 5, "Enable VPID" },
+    { 6, "WBINVD Exiting" },
+    { 7, "Unrestricted Guest" },
+    { 8, "APIC-register Virtualization" },
+    { 9, "Virtual-interrupt Delivery" },
+    { 10, "PAUSE-loop Exiting" },
+    { 11, "RDRAND Exiting" },
+    { 12, "Enable INVPCID" },
+    { 13, "Enable VM Functions" },
+    { 14, "VMCS Shadowing" },
+    { 15, "Enable ENCLS Exiting" },
+    { 16, "RDSEED Exiting" },
+    { 17, "Enable PML" },
+    { 18, "EPT-violation #VE" },
+    { 19, "Conceal VMX From PT" },
+    { 20, "Enable XSAVES/XRSTORS" },
+    { 22, "Mode-based Execute Control for EPT" },
+    { 23, "Sub-page Write Permissions for EPT"},
+    { 24, "Intel PT Uses Guest Physical Address"},
+    { 25, "Use TSC Scaling" },
+    { 26, "Enable User Wait and Pause"},
+    { 28, "Enable ENCLV Exiting"}
+};
+
+/*
+ * report_capability
+ *
+ * Reports capabilities present in 'cap' using the corresponding MSR values
+ * provided in 'lo' and 'hi'.
+ *
+ * Parameters:
+ *  cap: capability_info structure for this feature
+ *  len: number of entries in 'cap'
+ *  lo: low 32 bits of capability MSR value describing this feature
+ *  hi: high 32 bits of capability MSR value describing this feature
+ */
 
 void
 report_capability(struct capability_info *cap, uint8_t len, uint32_t lo,
@@ -123,11 +160,17 @@ detect_vmx_features(void)
 
 	// Processor based Controls1
         // By: Jiang Du
-	//printk(KERN_INFO "\n");
 	rdmsr(IA32_VMX_PROCBASED_CTLS, lo, hi);
         pr_info("Procbased Controls MSR: 0x%llx\n",
       		(uint64_t)(lo | (uint64_t)hi << 32));
     	report_capability(procbased, 21, lo, hi);
+
+	// Processor based Controls2
+        // By: Jiang Du
+        rdmsr(IA32_VMX_PROCBASED_CTLS2, lo, hi);
+        pr_info("Procbased Controls 2 MSR: 0x%llx\n",
+                (uint64_t)(lo | (uint64_t)hi << 32));
+        report_capability(procbased2, 27, lo, hi);
 }
 
 /*
